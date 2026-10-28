@@ -1,0 +1,10 @@
+country,asr_incidence_female,asr_mortality_female,breast_cases_women,breast_deaths_women,deaths_per_10_cases
+Cyprus,92.9,15.9,1004,213,2.1
+France,103.4,14.4,62713,14156,2.3
+Jordan,39.8,11.3,1866,510,2.7
+Lebanon,93.3,26.2,3404,978,2.9
+Saudi Arabia,35.7,10.1,3865,1022,2.6
+Syria,52.9,24.7,5537,2552,4.6
+Türkiye,44.2,9.1,25080,5613,2.2
+Egypt,48.3,18.3,26052,9717,3.7
+World,47.8,12.9,2434087,693660,2.8
