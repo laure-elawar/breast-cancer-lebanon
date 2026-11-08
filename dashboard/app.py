@@ -163,8 +163,8 @@ with t_over:
       <div class="kpis">
         {kpi(f"{int(y24.cases):,}", "women diagnosed in 2024", "users", .10, dark=True)}
         {kpi(f"×{ratio:.1f}", f"more cases than in 2005 ({int(y05.cases):,})", "trending-up", .18, dark=True)}
-        {kpi("1 in 4", "women diagnosed before age 50", "user-round", .26, dark=True)}
-        {kpi("1 in 3", "women still found at a late stage", "clock", .34, dark=True)}
+        {kpi("28%", "of women are diagnosed before age 50 — more than 1 in 4", "user-round", .26, dark=True)}
+        {kpi("1 in 3", "women still found at a late stage (Ministry of Public Health estimate, 2026)", "clock", .34, dark=True)}
       </div></div>""")
 
 # ================================================================== OVER TIME
@@ -218,7 +218,7 @@ with t_time:
 
 # ================================================================== AGE
 with t_age:
-    header("Age at diagnosis", "user-round", "1 in 4 women is diagnosed before 50",
+    header("Age at diagnosis", "user-round", "More than 1 in 4 women is diagnosed before 50",
            "Screening starts at 40 — but breast cancer doesn't wait. Younger women should know the signs and see a doctor early.")
     A = D["age"]
     A = A[A.age_start >= 20]
@@ -241,7 +241,7 @@ with t_age:
         layout(fig, 470, title=ttl(2024), margin=dict(l=6, r=10, t=50, b=6), yaxis=dict(range=[0, 640], visible=False), bargap=.22,
                xaxis=dict(type="category", title=dict(text="Age group (starting age of each 5-year band)", font=dict(size=11, color=MUTED)), tickangle=0),
                barcornerradius=6,
-               sliders=[dict(active=len(years) - 1, steps=steps, x=0, len=1, y=-0.1, pad=dict(t=36, b=0), currentvalue=dict(visible=False),
+               sliders=[dict(active=len(years) - 1, steps=steps, x=0.01, len=0.97, y=-0.1, pad=dict(t=36, b=0), currentvalue=dict(visible=False),
                              bgcolor=GREY_L, activebgcolor=PINK, bordercolor=LINE, tickcolor=GREY, font=dict(size=10, color=MUTED))],
                updatemenus=[dict(type="buttons", showactive=False, x=1, y=1.13, xanchor="right", yanchor="top", pad=dict(t=0, r=0),
                                  bgcolor=PINK_XL, bordercolor=PINK, font=dict(color=PINK, size=12),
@@ -324,13 +324,15 @@ with t_world:
 
     with st.container(border=False, key="card_world"):
         html(f'<div class="card-title">{icon("globe", 18, PINK, 2.4)}Breast cancer per 100,000 women, 2024</div>'
-             '<div class="card-sub">Rates adjusted for age, so countries compare fairly · switch between deaths and new cases</div>')
+             '<div class="card-sub">Rates adjusted for age, so countries compare fairly · bars re-sort for each view · comparators: Lebanon\'s neighbours plus Cyprus and France, two European countries at a similar incidence</div>')
+        order_inc = W.sort_values("asr_incidence_female").country.tolist()   # each view re-sorts so the ranking is always true
+        order_mor = W.sort_values("asr_mortality_female").country.tolist()
         fig = go.Figure(data=[wbar("asr_mortality_female")],
-                        frames=[go.Frame(data=[wbar("asr_incidence_female")], name="inc", layout=dict(xaxis=dict(range=[0, 120]))),
-                                go.Frame(data=[wbar("asr_mortality_female")], name="mor", layout=dict(xaxis=dict(range=[0, 31])))])
+                        frames=[go.Frame(data=[wbar("asr_incidence_female")], name="inc", layout=dict(xaxis=dict(range=[0, 120]), yaxis=dict(categoryorder="array", categoryarray=order_inc))),
+                                go.Frame(data=[wbar("asr_mortality_female")], name="mor", layout=dict(xaxis=dict(range=[0, 31]), yaxis=dict(categoryorder="array", categoryarray=order_mor)))])
         anim = lambda n: [[n], dict(mode="immediate", frame=dict(duration=650, redraw=True), transition=dict(duration=550, easing="cubic-in-out"))]
         layout(fig, 420, margin=dict(l=6, r=30, t=52, b=6), xaxis=dict(range=[0, 31], visible=False),
-               yaxis=dict(tickfont=dict(size=13, color=INK2)), bargap=.32, barcornerradius=6,
+               yaxis=dict(tickfont=dict(size=13, color=INK2), categoryorder="array", categoryarray=order_mor), bargap=.32, barcornerradius=6,
                updatemenus=[dict(type="buttons", direction="left", x=0, y=1.14, xanchor="left", yanchor="top", showactive=True, active=1,
                                  bgcolor="#fff", bordercolor=PINK, font=dict(size=13, color=PINK), pad=dict(r=6, t=0),
                                  buttons=[dict(label="  New cases  ", method="animate", args=anim("inc")),
@@ -376,7 +378,14 @@ with t_about:
                  f'<li>{inf}<span>Rising rates mix real risk with better detection and registration.</span></li>'
                  f'<li>{inf}<span>Lebanon\'s population figures are estimates; read 2013–2017 rates with caution.</span></li>'
                  f'<li>{inf}<span>The national registry does not record stage; stage data comes from published studies.</span></li></ul>')
-    html('<div class="foot">MSBA 325 · Data Visualization and Communication · American University of Beirut · Data accessed October 2026 · Icons: Lucide (ISC)</div>')
+    with st.container(border=False, key="card_method"):
+        dot = icon("calculator", 18, MUTED, 2.2)
+        html(f'<div class="card-title">How the key numbers are computed</div><ul class="checks">'
+             f'<li>{dot}<span><b>4 in 10</b> uses all cancers in women as the Ministry totals them, skin cancer included (42.6% without it).</span></li>'
+             f'<li>{dot}<span><b>Growth split</b> (17% more women, 26% older, 57% higher rates) applies population growth first, then ageing, then rates; reversing the first two moves 3 points between them, the 57% does not change.</span></li>'
+             f'<li>{dot}<span><b>Unknown age</b> (84 cases in 2024) is spread proportionally when computing rates and left out when computing shares.</span></li>'
+             f'<li>{dot}<span><b>Two rates for Lebanon:</b> 102 is recalculated from registered cases with World Bank population; 93 is GLOBOCAN\'s modelled estimate. Both use the Segi world standard; both are about double the world\'s 48.</span></li></ul>')
+    html('<div class="foot">MSBA 325 · Data Visualization and Communication · American University of Beirut · Fall 2026 · Team: Laure El Awar, Elie Khairallah, Jad Beayni, Atifa Dani, Patrick Daou · Data accessed October 2026 · Icons: Lucide (ISC)</div>')
 
 # ------------------------------------------------------------------ call to action (every tab)
 html(f"""<div class="cta"><div class="cta-ic">{icon("calendar-check", 26, "#fff", 2.2)}</div>
